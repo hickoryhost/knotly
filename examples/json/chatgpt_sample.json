@@ -1,0 +1,29 @@
+{
+  "title": "Sample Thread",
+  "model": "gpt-4",
+  "conversation_id": "conv-123",
+  "exported_at": "2024-01-01T12:00:00Z",
+  "messages": [
+    {
+      "id": "msg-1",
+      "author": {"role": "user", "name": "Alice"},
+      "create_time": "2024-01-01T12:01:00Z",
+      "content": {
+        "content_type": "text",
+        "parts": ["Hi there! Can you share the repo link?"]
+      }
+    },
+    {
+      "id": "msg-2",
+      "author": {"role": "assistant", "name": "GPT"},
+      "create_time": "2024-01-01T12:02:00Z",
+      "content": {
+        "content_type": "text",
+        "parts": ["Sure! Check out [Threadopolis](https://example.com/threadopolis)."]
+      },
+      "content_links": [
+        {"text": "Threadopolis", "href": "https://example.com/threadopolis"}
+      ]
+    }
+  ]
+}
