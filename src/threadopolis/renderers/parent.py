@@ -15,7 +15,7 @@ def render_parent(conversation: Conversation, *, parent_name: str) -> str:
     lines.append("")
     for turn in conversation.turns:
         filename = f"turn{turn.turn_index:03d}_{turn.mnemonic}.md"
-        lines.append(f"- [Turn {turn.turn_index}]({filename})")
+        lines.append(f"-[[{filename}]]")
     lines.append("")
     return "\n".join(lines).strip() + "\n"
 
