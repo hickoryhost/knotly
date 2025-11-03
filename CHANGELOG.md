@@ -4,7 +4,6 @@
 
 - Added HTML-to-JSON extraction path and CLI support for converting saved transcripts.
 - Documented the offline conversion flow and shipped a sample generated JSON export.
-- Refreshed CLI help text to highlight JSON and HTML workflows.
 
 ## 0.1.0 - 2024-03-01
 
