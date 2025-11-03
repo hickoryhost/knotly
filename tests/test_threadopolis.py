@@ -24,6 +24,24 @@ def test_html_build_matches_golden(tmp_path: Path):
     assert generated == golden
 
 
+def test_build_allows_non_empty_output_directory(tmp_path: Path):
+    out_dir = tmp_path / "existing"
+    out_dir.mkdir()
+    marker = out_dir / "keep.txt"
+    marker.write_text("do not remove", encoding="utf-8")
+
+    build_conversation(
+        input_path=Path("examples/html/conversation.html"),
+        output_dir=out_dir,
+        by_title=True,
+    )
+
+    generated = read_folder(out_dir)
+    golden = read_folder(Path("tests/golden/html"))
+    assert generated == golden
+    assert marker.read_text(encoding="utf-8") == "do not remove"
+
+
 def test_mnemonic_collision_suffixes():
     turns = [
         Turn(turn_index=i + 1, turn_id=str(i), role="user", author="Tester", content="Repeat text", raw_content=None, created_at=None, links=[], mnemonic="repeat-text")

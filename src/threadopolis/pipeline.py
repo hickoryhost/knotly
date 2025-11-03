@@ -44,8 +44,8 @@ def build_conversation(
     _stabilize_mnemonics(conversation)
 
     writer = OutputWriter(output_dir, parent_name=parent_name)
-    writer.prepare(force=force)
     plan = writer.plan(conversation)
+    writer.prepare(plan, force=force)
 
     if verbose:
         console.log("Plan prepared:")

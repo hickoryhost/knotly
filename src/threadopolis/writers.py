@@ -21,13 +21,21 @@ class OutputWriter:
         self.output_dir = output_dir
         self.parent_name = parent_name
 
-    def prepare(self, force: bool = False) -> None:
-        if self.output_dir.exists():
-            existing = [p for p in self.output_dir.iterdir() if p.name != ".DS_Store"]
-            if existing and not force:
-                raise FileExistsError(f"Output directory {self.output_dir} is not empty; use --force to overwrite")
-        else:
-            self.output_dir.mkdir(parents=True, exist_ok=True)
+    def prepare(self, plan: "Plan", force: bool = False) -> None:
+        # Ensure all parent directories exist before attempting to write files.
+        for path in plan.files:
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+        if force:
+            return
+
+        collisions = [path for path in plan.files if path.exists()]
+        if collisions:
+            formatted = ", ".join(str(path) for path in collisions)
+            raise FileExistsError(
+                "Output would overwrite existing files: "
+                f"{formatted}. Use --force to overwrite these files."
+            )
 
     def plan(self, conversation: Conversation) -> Plan:
         files: Dict[Path, str] = {}
