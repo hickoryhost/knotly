@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from .models import Conversation
-from .parsers import parse_html_export, parse_json_export
+from .parsers import parse_html_export
 from .utils import mnemonic_from_content
 from .writers import OutputWriter, Plan
 from .console import Console
@@ -22,7 +22,6 @@ class BuildResult:
 def build_conversation(
     *,
     input_path: Path,
-    input_format: str,
     output_dir: Path,
     title: Optional[str] = None,
     parent_name: str = "Conversation.md",
@@ -33,20 +32,20 @@ def build_conversation(
     verbose: bool = False,
 ) -> BuildResult:
     if verbose:
-        console.log(f"Loading conversation from {input_path} ({input_format})")
+        console.log(f"Loading conversation from {input_path} (html)")
 
-    if input_format == "json":
-        conversation = parse_json_export(input_path, timezone=timezone, title=title)
-    elif input_format == "html":
-        conversation = parse_html_export(input_path, timezone=timezone, title=title, by_title=by_title)
-    else:
-        raise ValueError("Unsupported format. Use 'json' or 'html'.")
+    conversation = parse_html_export(
+        input_path,
+        timezone=timezone,
+        title=title,
+        by_title=by_title,
+    )
 
     _stabilize_mnemonics(conversation)
 
     writer = OutputWriter(output_dir, parent_name=parent_name)
-    writer.prepare(force=force)
     plan = writer.plan(conversation)
+    writer.prepare(plan, force=force)
 
     if verbose:
         console.log("Plan prepared:")

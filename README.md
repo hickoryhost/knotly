@@ -1,15 +1,13 @@
 # Threadopolis
 
-Threadopolis converts long-form AI assistant conversations into Obsidian-friendly markdown bundles. It ingests ChatGPT/GPT-5 JSON exports or saved HTML pages, produces a parent conversation index, and splits every turn into a deterministic `turnNNN_<mnemonic>.md` file with backlinks, navigation, and metadata. Playwright capture and an offline HTML-to-JSON extractor are available for advanced harvesting workflows.
+Threadopolis converts long-form AI assistant conversations into Obsidian-friendly markdown bundles. It ingests saved ChatGPT HTML pages, produces a parent conversation index, and splits every turn into a deterministic `turnNNN_<mnemonic>.md` file with backlinks, navigation, and metadata.
 
 ## Features
 
 - Deterministic parent index with model, conversation, and participant metadata.
 - Per-turn files with backlinks, previous/next navigation, timestamp headers, and space for future related links.
 - Filename mnemonics generated from the first content words with collision-safe suffixes.
-- JSON and HTML parsers with timezone normalization.
-- Optional Playwright capture utility for harvesting conversations directly from a logged-in browser session.
-- Offline HTML-to-JSON extractor for saved “Save Page As” transcripts.
+- HTML parser with timezone normalization.
 - Thorough pytest suite with golden-file snapshots and parser edge cases.
 
 ## Quickstart
@@ -25,26 +23,16 @@ pip install -e .
 The package exposes a console script at `bin/threadopolis`. You can also invoke the module directly:
 
 ```bash
-python -m threadopolis.cli build --help
+python -m threadopolis.cli --help
 ```
 
 ## CLI Usage
 
-### Build a bundle from a JSON export
-
-```bash
-bin/threadopolis build \
-  --in examples/json/chatgpt_sample.json \
-  --format json \
-  --out output/json-sample
-```
-
 ### Build from a saved HTML page
 
 ```bash
-bin/threadopolis build \
+bin/threadopolis \
   --in examples/html/conversation.html \
-  --format html \
   --out output/html-sample \
   --by-title
 ```
@@ -52,27 +40,7 @@ bin/threadopolis build \
 ### Dry run a build
 
 ```bash
-bin/threadopolis build --in export.json --format json --out my-convo --dry-run -v
-```
-
-### Capture a live conversation to JSON
-
-```bash
-bin/threadopolis capture \
-  --user-data-dir ~/.config/chromium-profile \
-  --conv-url "https://chat.openai.com/c/abc123" \
-  --out-json capture.json
-```
-
-> **Tip:** The capture command requires a working Playwright installation (`pip install playwright` + `playwright install chromium`) and a logged-in profile directory.
-
-### Convert a saved HTML page to JSON
-
-```bash
-bin/threadopolis capture \
-  --html conversation.html \
-  --out-json conversation.json \
-  --by-title
+bin/threadopolis --in export.html --out my-convo --dry-run -v
 ```
 
 ## Library Usage
@@ -82,8 +50,7 @@ from pathlib import Path
 from threadopolis import build_conversation
 
 result = build_conversation(
-    input_path=Path("conversation.json"),
-    input_format="json",
+    input_path=Path("conversation.html"),
     output_dir=Path("vault/My Conversation"),
     force=True,
 )
@@ -94,8 +61,7 @@ print(f"Wrote {len(result.plan.files)} markdown files")
 
 The `examples/` folder contains:
 
-- `json/chatgpt_sample.json` and the corresponding generated bundle in `json/output/`.
-- `html/conversation.html`, the derived JSON export in `html/conversation.json`, and the generated bundle in `html/output/`.
+- `html/conversation.html` and the generated bundle in `html/output/`.
 
 These are used in snapshot tests and act as small reference exports.
 
@@ -117,15 +83,7 @@ All golden snapshots live in `tests/golden/`. To update them, regenerate the exa
 
 - HTML parsing targets common ChatGPT export structures; extremely custom DOMs may need tweaks.
 - Semantic link inference, embeddings, and Obsidian plugin integrations are reserved for future work (`--infer-links` flag).
-- Playwright capture is optional and relies on local browser state; understand the security implications of reusing logged-in profiles.
-
-## Headless Capture Safety Notes
-
-Running Playwright against your logged-in browser profile keeps all data on disk but still grants code automation access to that profile. Ensure you:
-
-- Use a dedicated profile directory.
-- Revoke access immediately if you suspect credential compromise.
-- Avoid sharing captured JSON files that may contain sensitive data.
+- Playwright capture utilities have been removed to streamline the application.
 
 ## License
 
