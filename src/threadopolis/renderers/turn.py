@@ -41,7 +41,7 @@ def render_turn(turn: Turn, conversation: Conversation, *, parent_name: str) -> 
         lines.append(" ".join(nav_line))
         lines.append("")
 
-    lines.append(turn.content.strip())
+    lines.append(turn.content)
     lines.append("")
 
     if turn.links:
@@ -51,9 +51,12 @@ def render_turn(turn: Turn, conversation: Conversation, *, parent_name: str) -> 
             lines.append(f"- [{link.text}]({link.href})")
         lines.append("")
 
-    lines.append("**Related:** ")
-    lines.append("")
-    return "\n".join(lines).strip() + "\n"
+    lines.append("**Related:**")
+
+    document = "\n".join(lines)
+    if not document.endswith("\n"):
+        document += "\n"
+    return document
 
 
 def _get_turn(conversation: Conversation, index: int) -> Optional[Turn]:

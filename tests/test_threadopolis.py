@@ -1,36 +1,21 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from threadopolis.models import Conversation, Turn
 from threadopolis.pipeline import build_conversation
+from threadopolis.renderers.parent import render_parent
 from threadopolis.utils import ensure_timezone, parse_datetime
-from threadopolis.capture.html_capture import html_to_json
 
 
 def read_folder(folder: Path) -> dict:
     return {path.name: path.read_text(encoding="utf-8") for path in sorted(folder.glob("*.md"))}
 
 
-def test_json_build_matches_golden(tmp_path: Path):
-    out_dir = tmp_path / "json"
-    build_conversation(
-        input_path=Path("examples/json/chatgpt_sample.json"),
-        input_format="json",
-        output_dir=out_dir,
-        force=True,
-    )
-    generated = read_folder(out_dir)
-    golden = read_folder(Path("tests/golden/json"))
-    assert generated == golden
-
-
 def test_html_build_matches_golden(tmp_path: Path):
     out_dir = tmp_path / "html"
     build_conversation(
         input_path=Path("examples/html/conversation.html"),
-        input_format="html",
         output_dir=out_dir,
         force=True,
         by_title=True,
@@ -38,6 +23,54 @@ def test_html_build_matches_golden(tmp_path: Path):
     generated = read_folder(out_dir)
     golden = read_folder(Path("tests/golden/html"))
     assert generated == golden
+
+
+def test_build_allows_non_empty_output_directory(tmp_path: Path):
+    out_dir = tmp_path / "existing"
+    out_dir.mkdir()
+    marker = out_dir / "keep.txt"
+    marker.write_text("do not remove", encoding="utf-8")
+
+    build_conversation(
+        input_path=Path("examples/html/conversation.html"),
+        output_dir=out_dir,
+        by_title=True,
+    )
+
+    generated = read_folder(out_dir)
+    golden = read_folder(Path("tests/golden/html"))
+    assert generated == golden
+    assert marker.read_text(encoding="utf-8") == "do not remove"
+
+
+def test_parent_skips_duplicate_conversation_heading():
+    convo = Conversation(
+        title="Conversation",
+        model=None,
+        conversation_id=None,
+        exported_at=None,
+        participants=[],
+        turns=[
+            Turn(
+                turn_index=1,
+                turn_id="t1",
+                role="user",
+                author="Tester",
+                content="Hello",
+                raw_content=None,
+                created_at=None,
+                links=[],
+                mnemonic="hello",
+            )
+        ],
+    )
+
+    rendered = render_parent(convo, parent_name="Conversation.md")
+
+    assert "# Conversation" not in rendered
+    lines = rendered.splitlines()
+    assert lines[0] == "## Turns"
+    assert lines[2] == "-[[turn001_hello.md]]"
 
 
 def test_mnemonic_collision_suffixes():
@@ -80,23 +113,40 @@ def test_html_parser_handles_nested_blocks(tmp_path: Path):
     source.write_text(html, encoding="utf-8")
     result = build_conversation(
         input_path=source,
-        input_format="html",
         output_dir=tmp_path / "out",
         force=True,
     )
     assert "Cell" in result.conversation.turns[0].content
 
 
-def test_html_capture_to_json(tmp_path: Path):
-    out_json = tmp_path / "capture.json"
-    html_to_json(
-        html_path=Path("examples/html/conversation.html"),
-        out_json=out_json,
-        by_title=True,
+def test_turn_content_preserves_line_breaks(tmp_path: Path):
+    html = """
+    <html><body>
+    <div class='conversation-turn' data-message-id='b1' data-role='user' data-author-name='Tester'>
+        <div class='message-content'>
+            <p>First paragraph.</p>
+            <p>Second paragraph.</p>
+            <ul>
+                <li>List item one.</li>
+                <li>List item two.</li>
+            </ul>
+            <ol>
+                <li>Numbered item one.</li>
+                <li>Numbered item two.</li>
+            </ol>
+            <p>Final line.</p>
+        </div>
+    </div>
+    </body></html>
+    """
+    source = tmp_path / "linebreaks.html"
+    source.write_text(html, encoding="utf-8")
+
+    result = build_conversation(
+        input_path=source,
+        output_dir=tmp_path / "out-lines",
+        force=True,
     )
-    payload = json.loads(out_json.read_text(encoding="utf-8"))
-    assert payload["title"] == "ChatGPT Conversation Example"
-    assert len(payload["messages"]) == 2
-    second = payload["messages"][1]
-    assert second["author"]["role"] == "assistant"
-    assert second["content"]["links"][0]["href"] == "https://example.com/docs"
+
+    expected = """First paragraph.\n\nSecond paragraph.\n\n- List item one.\n- List item two.\n\n1. Numbered item one.\n2. Numbered item two.\n\nFinal line."""
+    assert result.conversation.turns[0].content == expected

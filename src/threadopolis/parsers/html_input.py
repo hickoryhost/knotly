@@ -162,5 +162,137 @@ def parse_html_export(path: Path, *, timezone: Optional[str] = None, title: Opti
     )
 
 
+BLOCK_ELEMENTS = {
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "div",
+    "dl",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "li",
+    "main",
+    "nav",
+    "noscript",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "tbody",
+    "thead",
+    "tfoot",
+    "tr",
+    "ul",
+}
+
+LINE_BREAK_ELEMENTS = {"br"}
+DOUBLE_BREAK_ELEMENTS = {
+    "article",
+    "aside",
+    "blockquote",
+    "div",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "ul",
+}
+
+
 def _collect_text(node: Node) -> str:
-    return "".join(node.iter_text())
+    def append_newlines(target: List[str], count: int) -> None:
+        if count <= 0:
+            return
+        existing = 0
+        idx = len(target) - 1
+        while idx >= 0:
+            segment = target[idx]
+            if segment and set(segment) == {"\n"}:
+                existing += len(segment)
+                idx -= 1
+                continue
+            break
+        needed = max(0, count - existing)
+        if needed:
+            target.append("\n" * needed)
+
+    def render(current: Node) -> str:
+        pieces: List[str] = []
+        for item in current._contents:
+            if isinstance(item, str):
+                pieces.append(item)
+                continue
+
+            tag = item.tag.lower()
+
+            if tag in LINE_BREAK_ELEMENTS:
+                append_newlines(pieces, 1)
+                continue
+
+            rendered_child = render(item)
+
+            if tag == "li":
+                parent = item.parent
+                prefix = "- "
+                if parent and parent.tag.lower() == "ol":
+                    siblings = [
+                        child
+                        for child in parent.children
+                        if isinstance(child, Node) and child.tag.lower() == "li"
+                    ]
+                    try:
+                        prefix = f"{siblings.index(item) + 1}. "
+                    except ValueError:
+                        prefix = "1. "
+                item_text = rendered_child.strip()
+                if item_text:
+                    append_newlines(pieces, 1)
+                    pieces.append(prefix + item_text)
+                append_newlines(pieces, 1)
+                continue
+
+            if tag in BLOCK_ELEMENTS:
+                block_text = rendered_child.strip()
+                if block_text:
+                    newline_count = 2 if tag in DOUBLE_BREAK_ELEMENTS else 1
+                    append_newlines(pieces, newline_count)
+                    pieces.append(block_text)
+                    append_newlines(pieces, newline_count)
+                else:
+                    append_newlines(pieces, 1 if tag not in DOUBLE_BREAK_ELEMENTS else 2)
+                continue
+
+            pieces.append(rendered_child)
+
+        return "".join(pieces)
+
+    text = render(node)
+
+    # Collapse runs of more than two newlines while keeping intentional blank lines.
+    normalized_lines: List[str] = []
+    newline_run = 0
+    for char in text:
+        if char == "\n":
+            newline_run += 1
+            if newline_run <= 2:
+                normalized_lines.append(char)
+        else:
+            newline_run = 0
+            normalized_lines.append(char)
+
+    normalized = "".join(normalized_lines)
+    return normalized.strip()
