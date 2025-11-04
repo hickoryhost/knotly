@@ -86,3 +86,36 @@ def test_html_parser_handles_nested_blocks(tmp_path: Path):
         force=True,
     )
     assert "Cell" in result.conversation.turns[0].content
+
+
+def test_turn_content_preserves_line_breaks(tmp_path: Path):
+    html = """
+    <html><body>
+    <div class='conversation-turn' data-message-id='b1' data-role='user' data-author-name='Tester'>
+        <div class='message-content'>
+            <p>First paragraph.</p>
+            <p>Second paragraph.</p>
+            <ul>
+                <li>List item one.</li>
+                <li>List item two.</li>
+            </ul>
+            <ol>
+                <li>Numbered item one.</li>
+                <li>Numbered item two.</li>
+            </ol>
+            <p>Final line.</p>
+        </div>
+    </div>
+    </body></html>
+    """
+    source = tmp_path / "linebreaks.html"
+    source.write_text(html, encoding="utf-8")
+
+    result = build_conversation(
+        input_path=source,
+        output_dir=tmp_path / "out-lines",
+        force=True,
+    )
+
+    expected = """First paragraph.\n\nSecond paragraph.\n\n- List item one.\n- List item two.\n\n1. Numbered item one.\n2. Numbered item two.\n\nFinal line."""
+    assert result.conversation.turns[0].content == expected
