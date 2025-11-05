@@ -273,7 +273,7 @@ def _collect_text(node: Node) -> str:
                             if line:
                                 continuation_lines.append(indent + line)
                             else:
-                                continuation_lines.append("")
+                                continuation_lines.append(indent)
                         pieces.append("\n" + "\n".join(continuation_lines))
                 append_newlines(pieces, 1)
                 continue
