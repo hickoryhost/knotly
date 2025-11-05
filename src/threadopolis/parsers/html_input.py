@@ -249,19 +249,30 @@ def _collect_text(node: Node) -> str:
                 parent = item.parent
                 prefix = "- "
                 if parent and parent.tag.lower() == "ol":
-                    siblings = [
-                        child
-                        for child in parent.children
-                        if isinstance(child, Node) and child.tag.lower() == "li"
-                    ]
-                    try:
-                        prefix = f"{siblings.index(item) + 1}. "
-                    except ValueError:
+                    position = 0
+                    found = False
+                    for child in parent.children:
+                        if isinstance(child, Node) and child.tag.lower() == "li":
+                            position += 1
+                            if child is item:
+                                prefix = f"{position}. "
+                                found = True
+                                break
+                    if not found:
                         prefix = "1. "
                 item_text = rendered_child.strip()
                 if item_text:
                     append_newlines(pieces, 1)
-                    pieces.append(prefix + item_text)
+                    lines = item_text.splitlines()
+                    first_line = lines[0]
+                    pieces.append(prefix + first_line)
+                    if len(lines) > 1:
+                        indent = " " * max(len(prefix), 4)
+                        continuation = "\n".join(
+                            (indent + line) if line else indent
+                            for line in lines[1:]
+                        )
+                        pieces.append("\n" + continuation)
                 append_newlines(pieces, 1)
                 continue
 
