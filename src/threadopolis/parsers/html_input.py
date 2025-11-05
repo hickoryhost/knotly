@@ -270,10 +270,10 @@ def _collect_text(node: Node) -> str:
                         indent = " " * max(len(prefix), 4)
                         continuation_lines = []
                         for line in lines[1:]:
-                            if line:
+                            if line.strip():
                                 continuation_lines.append(indent + line)
                             else:
-                                continuation_lines.append(indent)
+                                continuation_lines.append("")
                         pieces.append("\n" + "\n".join(continuation_lines))
                 append_newlines(pieces, 1)
                 continue
