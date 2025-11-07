@@ -145,6 +145,7 @@ def parse_html_export(path: Path, *, timezone: Optional[str] = None, title: Opti
                 content=content,
                 raw_content=None,
                 created_at=created_at,
+                data_turn=node.get_attribute("data-turn"),
                 links=links,
                 mnemonic=mnemonic,
             )

@@ -104,7 +104,7 @@ def test_timezone_normalization():
 def test_html_parser_handles_nested_blocks(tmp_path: Path):
     html = """
     <html><body>
-    <div class='conversation-turn' data-message-id='a1' data-role='user' data-author-name='Tester' data-timestamp='2024-01-01T00:00:00Z'>
+    <div class='conversation-turn' data-message-id='a1' data-role='user' data-turn='user' data-author-name='Tester' data-timestamp='2024-01-01T00:00:00Z'>
         <div class='message-content'><p>Intro</p><table><tr><td>Cell</td></tr></table></div>
     </div>
     </body></html>
@@ -116,13 +116,15 @@ def test_html_parser_handles_nested_blocks(tmp_path: Path):
         output_dir=tmp_path / "out",
         force=True,
     )
-    assert "Cell" in result.conversation.turns[0].content
+    turn = result.conversation.turns[0]
+    assert "Cell" in turn.content
+    assert turn.data_turn == "user"
 
 
 def test_turn_content_preserves_line_breaks(tmp_path: Path):
     html = """
     <html><body>
-    <div class='conversation-turn' data-message-id='b1' data-role='user' data-author-name='Tester'>
+    <div class='conversation-turn' data-message-id='b1' data-role='user' data-turn='user' data-author-name='Tester'>
         <div class='message-content'>
             <p>First paragraph.</p>
             <p>Second paragraph.</p>
@@ -149,4 +151,6 @@ def test_turn_content_preserves_line_breaks(tmp_path: Path):
     )
 
     expected = """First paragraph.\n\nSecond paragraph.\n\n- List item one.\n- List item two.\n\n1. Numbered item one.\n2. Numbered item two.\n\nFinal line."""
-    assert result.conversation.turns[0].content == expected
+    turn = result.conversation.turns[0]
+    assert turn.content == expected
+    assert turn.data_turn == "user"

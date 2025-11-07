@@ -20,6 +20,7 @@ class Turn:
     content: str
     raw_content: Optional[str]
     created_at: Optional[datetime]
+    data_turn: Optional[str] = None
     links: List[Link] = field(default_factory=list)
     mnemonic: str = ""
 
