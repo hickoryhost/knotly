@@ -10,7 +10,11 @@ BACKLINK_TEMPLATE = "[← Back to Conversation](Conversation.md)"
 
 
 def render_turn(turn: Turn, conversation: Conversation, *, parent_name: str) -> str:
-    lines = [""]
+    heading = f"# Turn {turn.turn_index}"
+    if turn.data_turn:
+        heading = f"{heading} ({turn.data_turn})"
+
+    lines = [heading, ""]
     header = []
     if turn.created_at:
         header.append(turn.created_at.isoformat())

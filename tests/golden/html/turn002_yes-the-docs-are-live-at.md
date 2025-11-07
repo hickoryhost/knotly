@@ -1,6 +1,6 @@
-# Turn 2
+# Turn 2 (assistant)
 
-2024-02-01T09:16:00+00:00 | Assistant | as GPT
+2024-02-01T09:16:00+00:00 | as GPT
 
 [← Back to Conversation](Conversation.md)
 ← [[turn001_hello-any-updates.md]]
