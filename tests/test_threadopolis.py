@@ -70,7 +70,7 @@ def test_parent_skips_duplicate_conversation_heading():
     assert "# Conversation" not in rendered
     lines = rendered.splitlines()
     assert lines[0] == "## Turns"
-    assert lines[2] == "-[[turn001_hello.md]]"
+    assert lines[2] == "- [[turn001_hello.md]]"
 
 
 def test_mnemonic_collision_suffixes():
