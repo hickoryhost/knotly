@@ -1,63 +1,154 @@
 # 🪢 knotly
 
-Reorganizing conversations into knots of thought.
+Turn long rambling GPT-5 chats into a tidy set of interlinked Markdown files ready for Obsidian. One knotty conversation in, a navigable network of thoughts out.
 
-knotly converts long-form AI assistant conversations into Obsidian-friendly markdown bundles. It ingests saved ChatGPT HTML pages, produces a parent conversation index, and splits every turn into a deterministic `turnNNN_<mnemonic>.md` file with backlinks, navigation, and metadata.
+## Requirements
 
-## Features
+- **Git** — installed and working on your command line.  
+- **Python 3.9+** — installed and working on your command line.  
+- Ability to install Python packages for your user (no admin required).  
+- Your shell’s **PATH** should include where Python places console scripts (see notes per OS below).
 
-- Deterministic parent index with model, conversation, and participant metadata.
-- Per-turn files with backlinks, previous/next navigation, timestamp headers, and space for future related links.
-- Filename mnemonics generated from the first content words with collision-safe suffixes.
-- HTML parser with timezone normalization.
-- Thorough pytest suite with golden-file snapshots and parser edge cases.
+> This project assumes Git and Python are already installed and set up. (No installation instructions for those are included here.)
 
-## Quickstart
+---
 
-knotly is pure Python 3.11+ with no external dependencies required for the core build flow.
+## Quick Start (Command Line)
+
+After following the steps for your OS, you should be able to run `knotly` from **any** terminal window.
+
+### Windows
+
+1. Open **Command Prompt** or **PowerShell**.
+2. Clone the repo:
+   ```powershell
+   git clone https://github.com/hickoryhost/knotly.git
+   ```
+3. Change into the folder:
+   ```powershell
+   cd knotly
+   ```
+4. Install the app for your current user:
+   ```powershell
+   python -m pip install .
+   ```
+5. Test it:
+   ```powershell
+   knotly --help
+   ```
+
+**PATH note (Windows):** Python typically places console scripts in a path like:
+```
+%LocalAppData%\Programs\Python\Python3xx\Scripts
+```
+Ensure that directory is on your PATH so `knotly` is available in any new terminal.
+
+---
+
+### macOS
+
+1. Open **Terminal**.
+2. Clone the repo:
+   ```bash
+   git clone https://github.com/hickoryhost/knotly.git
+   ```
+3. Change into the folder:
+   ```bash
+   cd knotly
+   ```
+4. Install the app for your current user:
+   ```bash
+   python3 -m pip install --user .
+   ```
+5. Test it:
+   ```bash
+   knotly --help
+   ```
+
+**PATH note (macOS):** With `--user`, Python typically places console scripts in:
+```
+~/Library/Python/3.x/bin
+```
+Make sure that directory is on your PATH so `knotly` is recognized in new terminals.
+
+---
+
+### Linux
+
+1. Open your shell.
+2. Clone the repo:
+   ```bash
+   git clone https://github.com/hickoryhost/knotly.git
+   ```
+3. Change into the folder:
+   ```bash
+   cd knotly
+   ```
+4. Install the app for your current user:
+   ```bash
+   python3 -m pip install --user .
+   ```
+5. Test it:
+   ```bash
+   knotly --help
+   ```
+
+**PATH note (Linux):** With `--user`, Python typically places console scripts in:
+```
+~/.local/bin
+```
+Ensure that directory is on your PATH so `knotly` runs from any terminal.
+
+---
+
+## Verify
+
+- Show help:
+  ```bash
+  knotly --help
+  ```
+- (Optional) Module form (works regardless of PATH):
+  ```bash
+  python -m knotly.cli --help
+  ```
+
+---
+
+## Development Install (Optional)
+
+If you plan to modify the code and want edits to take effect immediately:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+# from the cloned repository folder
+python -m venv .venv            # use: python3 -m venv .venv on macOS/Linux
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows CMD:       .venv\Scripts\activate.bat
+# macOS/Linux:       source .venv/bin/activate
+python -m pip install -e .
+knotly --help
 ```
 
-The package exposes a console script at `bin/knotly`. You can also invoke the module directly:
+Deactivate later with `deactivate`.
 
-```bash
-python -m knotly.cli --help
-```
+---
 
-## CLI Usage
+## Troubleshooting
 
-### Build from a saved HTML page
+- **`knotly: command not found` / `'knotly' is not recognized`**  
+  Ensure your OS-specific *console scripts* directory is on your PATH (see the notes in each OS section).  
+  As a fallback, the module form always works:
+  ```bash
+  python -m knotly.cli --help
+  ```
 
-```bash
-bin/knotly \
-  --in examples/html/conversation.html \
-  --out output/html-sample \
-  --by-title
-```
+- **Multiple Python versions**  
+  Use the explicit interpreter you intend (e.g., `py -3.11 -m pip install .` on Windows, or `python3.11 -m pip install .` on macOS/Linux).
 
-### Dry run a build
+---
 
-```bash
-bin/knotly --in export.html --out my-convo --dry-run -v
-```
+## What knotly does (in one sentence)
 
-## Library Usage
-
-```python
-from pathlib import Path
-from knotly import build_conversation
-
-result = build_conversation(
-    input_path=Path("conversation.html"),
-    output_dir=Path("vault/My Conversation"),
-    force=True,
-)
-print(f"Wrote {len(result.plan.files)} markdown files")
-```
+Parses a GPT-5 conversation and emits a parent index file plus one Markdown file per turn, with bidirectional links that play nicely with Obsidian’s graph/backlinks.
 
 ## Examples
 
@@ -83,9 +174,7 @@ All golden snapshots live in `tests/golden/`. To update them, regenerate the exa
 
 ## Limitations & Roadmap
 
-- HTML parsing targets common ChatGPT export structures; extremely custom DOMs may need tweaks.
 - Semantic link inference, embeddings, and Obsidian plugin integrations are reserved for future work (`--infer-links` flag).
-- Playwright capture utilities have been removed to streamline the application.
 
 ## License
 

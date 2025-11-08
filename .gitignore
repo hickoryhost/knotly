@@ -5,3 +5,41 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 /output/
+
+# ---- Python build and environment files ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Test and log files
+.coverage
+*.log
+
+# Optional: Jupyter & cache files
+.ipynb_checkpoints/
+*.sqlite3
+.cache/
